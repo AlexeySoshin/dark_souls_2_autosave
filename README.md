@@ -9,12 +9,12 @@ go build
 Otherwise, just get the latest version from the /dist directory
 
 ## Usage
-Place the executable file inside Dark Souls 2 saves directory.
-When launched, this program stores a backup of every autosave.
+Place the executable file inside Dark Souls 2 saves directory.<br />
+When launched, this program stores a backup of every autosave.<br />
 You're then get the ability to revert to previous state of you character,
 especially useful in case of his death.
-You must exit your game before loading the desired save file.
-In case the file you loaded didn't satisfy you, you may undo your load.
+You must exit your game before loading the desired save file.<br />
+In case the file you loaded didn't satisfy you, you may undo your load.<br />
 
 ## Licence
 MIT
