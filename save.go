@@ -20,7 +20,11 @@ const CHECK_FREQUENCY = 1
 const SAVE_FREQUENCY = 10
 
 const MAX_KEPT_SAVE_FILES = 30
-const MAX_KEPT_BACKUP_FILES = 60
+const DEFAULT_MAX_KEPT_BACKUP_FILES = 60
+
+const SAVE_DIRECTORY = "./"
+
+var MAX_KEPT_BACKUP_FILES = DEFAULT_MAX_KEPT_BACKUP_FILES
 
 const MAX_SAVES = 100
 const MAX_BACKUPS = 100
@@ -104,8 +108,6 @@ func backupCurrentSave() error {
 	return copyFiles(DEFAULT_SAVE, newFilename)
 }
 
-const SAVE_DIRECTORY = "./"
-
 func getLatestSave() (fileName string, file os.FileInfo) {
 
 	latestSaveFileName := ""
@@ -135,36 +137,30 @@ func loadLatestSave() (latestSaveFileName string, err error) {
 	return latestSaveFileName, err
 }
 
-func load() {
+func load() error {
 
 	err := backupCurrentSave()
 
 	if err != nil {
-		printF("Error creating backup %q", err)
+		p(fmt.Sprintf("Error creating backup %q", err))
 	} else {
 		latestSaveFileName, err := loadLatestSave()
 
 		if err != nil {
-			printF("Error loading latest save %q", err)
+			p(fmt.Sprintf("Error loading latest save %q", err))
 		} else if latestSaveFileName == "" {
 			p("No saves located")
 		} else {
-			printF("Loaded %s\n", latestSaveFileName)
+			p(fmt.Sprintf("Loaded %s\n", latestSaveFileName))
 			err = os.Remove(latestSaveFileName)
 		}
 	}
+
+	return err
 }
 
 func undo() {
 
-}
-
-func printF(msg string, args ...interface{}) {
-	p(format(msg, args))
-}
-
-func format(msg string, args []interface{}) string {
-	return fmt.Sprintf(msg, args)
 }
 
 var info os.FileInfo
