@@ -182,7 +182,7 @@ func watchSave() {
 
 		currentInfo, err := os.Stat(DEFAULT_SAVE)
 
-		if (err != nil) {
+		if err != nil {
 			continue
 		}
 
@@ -229,7 +229,11 @@ func createLock() bool {
 }
 
 func unlock() {
-	os.Remove(LOCK_FILE_NAME)
+	err := os.Remove(LOCK_FILE_NAME)
+
+	if err != nil {
+		p("Unable to unlock the file")
+	}
 }
 
 func main() {
