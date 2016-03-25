@@ -51,9 +51,9 @@ func save() {
 	err := copyFiles(DEFAULT_SAVE, newFilename)
 
 	if err != nil {
-		p(fmt.Sprintf("Failed %q", err))
+		message(fmt.Sprintf("Failed %q", err))
 	} else {
-		p(fmt.Sprintf("Saved %s", newFilename))
+		message(fmt.Sprintf("Saved %s", newFilename))
 	}
 
 	cleanup()
@@ -73,7 +73,7 @@ func deleteOldFiles(fileNames []string, numFilesToKeep int) {
 		for _, f := range filesToDelete {
 			err := os.Remove(f)
 			if err == nil {
-				p("Removed " + f)
+				debug("Removed " + f)
 			}
 		}
 	}
@@ -137,21 +137,22 @@ func loadLatestSave() (latestSaveFileName string, err error) {
 	return latestSaveFileName, err
 }
 
+// Attempts to create a backup, then load latest save file
 func load() error {
 
 	err := backupCurrentSave()
 
 	if err != nil {
-		p(fmt.Sprintf("Error creating backup %q", err))
+		warning(fmt.Sprintf("Error creating backup %q", err))
 	} else {
 		latestSaveFileName, err := loadLatestSave()
 
 		if err != nil {
-			p(fmt.Sprintf("Error loading latest save %q", err))
+			warning(fmt.Sprintf("Error loading latest save %q", err))
 		} else if latestSaveFileName == "" {
-			p("No saves located")
+			message("No saves located")
 		} else {
-			p(fmt.Sprintf("Loaded %s\n", latestSaveFileName))
+			message(fmt.Sprintf("Loaded %s\n", latestSaveFileName))
 			err = os.Remove(latestSaveFileName)
 		}
 	}
@@ -169,7 +170,7 @@ var info os.FileInfo
 // If the file was changed, backs it up
 func watchSave() {
 
-	defer p("File watcher exiting")
+	defer debug("File watcher exiting")
 
 	info, _ = os.Stat(DEFAULT_SAVE)
 
@@ -185,7 +186,8 @@ func watchSave() {
 		timeDiff := currentInfo.ModTime().Sub(info.ModTime())
 
 		if timeDiff.Seconds() > 0 {
-			p(fmt.Sprintf("Save changed, diff %f", timeDiff.Seconds()))
+
+			debug(fmt.Sprintf("Save changed, diff %f", timeDiff.Seconds()))
 			if timeDiff > SAVE_FREQUENCY {
 				info = currentInfo
 				save()
@@ -199,9 +201,29 @@ const LOAD_CHAR = "l"
 const EXIT_CHAR = "x"
 const UNDO_CHAR = "u"
 
+const LOG_WARNING = 2
+const LOG_INFO = LOG_WARNING - 1
+const LOG_DEBUG = LOG_INFO - 1
+
+var logLevel = LOG_INFO
+
+func warning(msg string) {
+	if logLevel <= LOG_WARNING {
+		fmt.Println("Error: " + msg)
+	}
+}
+
 // Helper method for output
-func p(msg string) {
-	fmt.Println(msg)
+func message(msg string) {
+	if logLevel <= LOG_INFO {
+		fmt.Println(msg)
+	}
+}
+
+func debug(msg string) {
+	if logLevel <= LOG_DEBUG {
+		fmt.Println("DEBUG: " + msg)
+	}
 }
 
 const LOCK_FILE_NAME = "saves.lock"
@@ -228,7 +250,7 @@ func unlock() {
 	err := os.Remove(LOCK_FILE_NAME)
 
 	if err != nil {
-		p("Unable to unlock the file")
+		warning("Unable to unlock the file")
 	}
 }
 
@@ -242,12 +264,12 @@ func main() {
 		defer unlock()
 
 		exit := false
+		message("What would you like to do?")
 		for !exit {
 			latestSaveName, _ := getLatestSave()
-			p("What would you like to do?")
-			p(fmt.Sprintf("[%s] for save, [%s] for load, [%s] to undo load, [%s] for exit", SAVE_CHAR, LOAD_CHAR, UNDO_CHAR, EXIT_CHAR))
-			p(fmt.Sprintf("Last save is %s", latestSaveName))
-			p("Hit enter to confirm")
+			message(fmt.Sprintf("Last save is %s", latestSaveName))
+			message(fmt.Sprintf("[%s] for save, [%s] for load, [%s] to undo load, [%s] for exit", SAVE_CHAR, LOAD_CHAR, UNDO_CHAR, EXIT_CHAR))
+			message("Hit enter to confirm")
 			input, _ := reader.ReadString('\n')
 
 			char := input[0:1]
@@ -260,16 +282,16 @@ func main() {
 			case UNDO_CHAR:
 				undo()
 			case EXIT_CHAR:
-				p("Exiting")
+				message("Exiting")
 				exit = true
 			default:
-				p("Unknown command: " + char)
+				message("Unknown command: " + char)
 			}
 		}
 	} else {
-		p("Lock file found")
-		p("Either you have another instance of this program already running, or the progam didn't quit correctly last time")
-		p("If the later is the case, please remove the lock file manually")
+		message("Lock file found")
+		message("Either you have another instance of this program already running, or the progam didn't quit correctly last time")
+		message("If the later is the case, please remove the lock file manually")
 	}
 
 	fmt.Println("Bye!")
