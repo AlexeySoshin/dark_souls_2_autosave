@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"math"
 )
 
 const DEFAULT_SAVE = "DS2SOFS0000.sl2"
@@ -68,8 +69,10 @@ func isBackupFile(fileName string) bool {
 }
 
 func deleteOldFiles(fileNames []string, numFilesToKeep int) {
-	if len(fileNames) > numFilesToKeep {
-		filesToDelete := fileNames[0 : len(fileNames)-MAX_KEPT_SAVE_FILES-1]
+	filesCount := len(fileNames)
+	if filesCount > 0 && filesCount > numFilesToKeep {
+		deleteCount := int(math.Max(float64(filesCount), float64(filesCount-MAX_KEPT_SAVE_FILES-1)))
+		filesToDelete := fileNames[0 : deleteCount]
 		for _, f := range filesToDelete {
 			err := os.Remove(f)
 			if err == nil {
@@ -82,13 +85,15 @@ func deleteOldFiles(fileNames []string, numFilesToKeep int) {
 func cleanup() {
 	files, _ := ioutil.ReadDir(SAVE_DIRECTORY)
 
-	allSaves := make([]string, MAX_SAVES)
-	allBackups := make([]string, MAX_BACKUPS)
+	allSaves := []string{}
+	allBackups := []string{}
 	for _, f := range files {
 		currentFileName := f.Name()
 		if isSaveFile(currentFileName) {
 			allSaves = append(allSaves, currentFileName)
 		} else if isBackupFile(currentFileName) {
+
+			fmt.Println(currentFileName)
 			allBackups = append(allBackups, currentFileName)
 		}
 	}
@@ -160,9 +165,6 @@ func load() error {
 	return err
 }
 
-func undo() {
-
-}
 
 var info os.FileInfo
 
@@ -199,7 +201,6 @@ func watchSave() {
 const SAVE_CHAR = "s"
 const LOAD_CHAR = "l"
 const EXIT_CHAR = "x"
-const UNDO_CHAR = "u"
 
 const LOG_WARNING = 2
 const LOG_INFO = LOG_WARNING - 1
@@ -260,15 +261,17 @@ func main() {
 	go watchSave()
 	lock := createLock()
 
+	instructions := fmt.Sprintf("[%s] for save, [%s] for load, [%s] for exit", SAVE_CHAR, LOAD_CHAR, EXIT_CHAR)
 	if lock {
 		defer unlock()
 
 		exit := false
 		message("What would you like to do?")
+		message(instructions)
 		for !exit {
 			latestSaveName, _ := getLatestSave()
 			message(fmt.Sprintf("Last save is %s", latestSaveName))
-			message(fmt.Sprintf("[%s] for save, [%s] for load, [%s] to undo load, [%s] for exit", SAVE_CHAR, LOAD_CHAR, UNDO_CHAR, EXIT_CHAR))
+
 			message("Hit enter to confirm")
 			input, _ := reader.ReadString('\n')
 
@@ -279,13 +282,12 @@ func main() {
 				save()
 			case LOAD_CHAR:
 				load()
-			case UNDO_CHAR:
-				undo()
 			case EXIT_CHAR:
 				message("Exiting")
 				exit = true
 			default:
 				message("Unknown command: " + char)
+				message(instructions)
 			}
 		}
 	} else {

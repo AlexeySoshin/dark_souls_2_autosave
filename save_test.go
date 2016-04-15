@@ -38,6 +38,7 @@ func TestUnlock(t *testing.T) {
 }
 
 func TestLockTwice(t *testing.T) {
+	defer unlock()
 	lock := createLock()
 
 	if !lock {
@@ -61,6 +62,8 @@ func deleteFakeSave() {
 
 func TestBackupCurrentSave(t *testing.T) {
 	createFakeSave()
+	MAX_KEPT_BACKUP_FILES = 0
+	defer cleanup()
 	defer deleteFakeSave()
 	err := backupCurrentSave()
 
