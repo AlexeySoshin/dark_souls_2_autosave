@@ -6,7 +6,9 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 	"math"
 )
@@ -264,6 +266,14 @@ func main() {
 	instructions := fmt.Sprintf("[%s] for save, [%s] for load, [%s] for exit", SAVE_CHAR, LOAD_CHAR, EXIT_CHAR)
 	if lock {
 		defer unlock()
+
+		closeSignal := make(chan os.Signal, 1)
+		signal.Notify(closeSignal, syscall.SIGINT, syscall.SIGTERM)
+
+		go func() {
+			<-closeSignal
+			unlock()
+		}()
 
 		exit := false
 		message("What would you like to do?")
