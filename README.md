@@ -1,7 +1,7 @@
-# Dark Souls 2 Autosave
-This is a command line autosaver for Dark Souls 2<br />
-When launched, this program stores a backup of every autosave.<br />
-You're then get the ability to revert to previous state of you character,
+# Dark Souls Autosave
+This is a command line autosaver for Dark Souls  I/II/III <br />
+When launched, this program stores a backup of every save done by the game.<br />
+You then get the ability to revert to previous state of you character,
 especially useful in case of his death.
 You must exit your game before loading the desired save file.<br />
 In case the file you loaded didn't satisfy you, you may undo your load.<br />
